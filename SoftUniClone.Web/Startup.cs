@@ -1,9 +1,12 @@
 ﻿namespace SoftUniClone.Web
 {
+    using AutoMapper;
+    using Common;
     using Data;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Identity;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
@@ -32,20 +35,25 @@
             services.AddDbContext<SoftUniCloneDbContext>(options =>
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));
-            services.AddDefaultIdentity<User>(option =>
+
+            services.AddIdentity<User, IdentityRole>(option =>
                 {
                     option.Password.RequireDigit = false;
                     option.Password.RequireLowercase = false;
                     option.Password.RequireNonAlphanumeric = false;
                     option.Password.RequireUppercase = false;
                 })
-                .AddEntityFrameworkStores<SoftUniCloneDbContext>();
+                .AddDefaultUI()
+                .AddEntityFrameworkStores<SoftUniCloneDbContext>()
+                .AddDefaultTokenProviders();
 
             //services.AddAuthentication()
             //    .AddFacebook(option =>
             //    {
 
             //    });
+
+            services.AddAutoMapper();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
@@ -69,6 +77,16 @@
             app.UseCookiePolicy();
 
             app.UseAuthentication();
+
+            app.SeedDatabase();
+            
+            app.UseMvc(routes =>
+            {
+                routes.MapRoute(
+                    name: "areas",
+                    template: "{area:exists}/{controller=Home}/{action=Index}/{id?}"
+                );
+            });
 
             app.UseMvc(routes =>
             {
